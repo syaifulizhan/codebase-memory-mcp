@@ -349,6 +349,7 @@ FOUNDATION_SRCS = \
     src/foundation/dump_verify.c \
     src/foundation/limits.c \
     src/foundation/index_policy.c \
+    src/foundation/secret_redact.c \
     src/foundation/subprocess.c \
     src/foundation/git_env.c \
     src/foundation/sha256.c \
@@ -720,6 +721,7 @@ TEST_FOUNDATION_SRCS = \
     tests/test_log.c \
     tests/test_str_util.c \
     tests/test_index_policy.c \
+    tests/test_secret_redact.c \
     tests/test_workspace.c \
     tests/test_platform.c \
     tests/test_diagnostics.c \

@@ -1710,6 +1710,7 @@ extern void suite_str_intern(void);
 extern void suite_log(void);
 extern void suite_str_util(void);
 extern void suite_index_policy(void);
+extern void suite_secret_redact(void);
 extern void suite_workspace(void);
 extern void suite_platform(void);
 extern void suite_diagnostics(void);
@@ -2258,6 +2259,7 @@ int main(int argc, char **argv) {
     RUN_SELECTED_SUITE(log);
     RUN_SELECTED_SUITE(str_util);
     RUN_SELECTED_SUITE(index_policy);
+    RUN_SELECTED_SUITE(secret_redact);
     RUN_SELECTED_SUITE(workspace);
     RUN_SELECTED_SUITE(platform);
     RUN_SELECTED_SUITE(diagnostics);

@@ -86,6 +86,7 @@ enum {
 #include "foundation/hash_table.h"
 #include "foundation/subprocess.h"
 #include "foundation/sha256.h"
+#include "foundation/secret_redact.h"
 #include "mcp/index_supervisor.h"
 #include "mcp/compact_out.h"
 #include "foundation/str_util.h"
@@ -10509,6 +10510,9 @@ static char *read_file_lines(const char *path, int start, int end) {
         free(result);
         return NULL;
     }
+    /* Fork hardening: the single choke point for source text returned to agents
+     * (get_code_snippet, search_code source/context). Line structure is kept. */
+    (void)cbm_redact_secrets_inplace(&result);
     return result;
 }
 
@@ -15746,8 +15750,16 @@ static bool scan_and_classify_grep_matches(
         bool match_known = search_match_bounds(content, pattern, use_regex,
                                                content_regex_ready ? &content_regex : NULL,
                                                &match_start, &match_end);
+        /* Fork hardening: raw match lines are file text too. Byte offsets refer to the
+         * original line, so a redacted line drops its match bounds. */
+        char *redacted_content = heap_strdup(content);
+        if (redacted_content && cbm_redact_secrets_inplace(&redacted_content)) {
+            content = redacted_content;
+            match_known = false;
+        }
         search_raw_preview(&hit, content, raw_content_offset_set, raw_content_offset, match_known,
                            match_start, match_end);
+        free(redacted_content);
         if (!classify_grep_hit(&hit, file_nodes, file_node_count, sr, sr_count, sr_cap, &sr_index,
                                raw, raw_offset, raw_limit, raw_count, raw_stored_count, raw_cap,
                                raw_content_truncated)) {

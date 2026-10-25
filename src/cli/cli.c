@@ -13685,7 +13685,10 @@ int cbm_cmd_update(int argc, char **argv) {
     if (!getenv("CBM_ALLOW_UPSTREAM_UPDATE")) {
         (void)argc;
         (void)argv;
-        fprintf(stderr, "update disabled in this fork: run ~/Projects/codebase-memory-mcp/scripts/fork-rebuild.sh\n");
+        fprintf(stderr,
+                "This hardened fork tracks upstream via scripts/fork-rebuild.sh (merge upstream, "
+                "run tests and leak checks, then install). Set CBM_ALLOW_UPSTREAM_UPDATE=1 to use "
+                "the stock updater.\n");
         return 1;
     }
     parse_auto_answer(argc, argv);
