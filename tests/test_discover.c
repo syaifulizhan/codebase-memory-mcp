@@ -231,6 +231,20 @@ TEST(suffix_fast_pem) {
 
 /* ── Filename skip (fast mode) ─────────────────────────────────── */
 
+TEST(fn_skip_secret_files) {
+    ASSERT_TRUE(cbm_should_skip_filename(".env", CBM_MODE_FULL));
+    ASSERT_TRUE(cbm_should_skip_filename(".env.local", CBM_MODE_FULL));
+    ASSERT_TRUE(cbm_should_skip_filename(".env.production", CBM_MODE_FULL));
+    ASSERT_TRUE(cbm_should_skip_filename("prod.env", CBM_MODE_FULL));
+    ASSERT_TRUE(cbm_should_skip_filename("server.key", CBM_MODE_FULL));
+    ASSERT_TRUE(cbm_should_skip_filename("cert.pem", CBM_MODE_FULL));
+    ASSERT_TRUE(cbm_should_skip_filename("id_ed25519", CBM_MODE_FULL));
+    ASSERT_TRUE(cbm_should_skip_filename(".npmrc", CBM_MODE_FULL));
+    ASSERT_FALSE(cbm_should_skip_filename(".env.example", CBM_MODE_FULL));
+    ASSERT_FALSE(cbm_should_skip_filename("environment.ts", CBM_MODE_FULL));
+    ASSERT_FALSE(cbm_should_skip_filename("keyboard.c", CBM_MODE_FULL));
+    PASS();
+}
 TEST(fn_skip_license) {
     ASSERT_TRUE(cbm_should_skip_filename("LICENSE", CBM_MODE_FAST));
     PASS();
@@ -2425,6 +2439,7 @@ SUITE(discover) {
     RUN_TEST(suffix_fast_pem);
 
     /* Filename skip */
+    RUN_TEST(fn_skip_secret_files);
     RUN_TEST(fn_skip_license);
     RUN_TEST(fn_skip_changelog);
     RUN_TEST(fn_skip_gosum);

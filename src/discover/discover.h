@@ -162,6 +162,8 @@ bool cbm_should_skip_dir(const char *dirname, cbm_index_mode_t mode);
 bool cbm_has_ignored_suffix(const char *filename, cbm_index_mode_t mode);
 
 /* Check if a specific filename should be skipped in fast mode (e.g. LICENSE, go.sum). */
+/* Fork policy: true for secret-bearing files that are never indexed. */
+bool cbm_is_secret_filename(const char *filename);
 bool cbm_should_skip_filename(const char *filename, cbm_index_mode_t mode);
 
 /* Check if a path matches fast-mode substring patterns (e.g. .d.ts, .pb.go). */
