@@ -1,5 +1,7 @@
 # codebase-memory-mcp: local code intelligence for AI agents via MCP
 
+> **Hardened fork** of [DeusData/codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp) (MIT). Adds secret-file exclusion and secret redaction; otherwise identical. See [FORK.md](FORK.md).
+
 [![GitHub Release](https://img.shields.io/github/v/release/DeusData/codebase-memory-mcp?style=flat&color=blue)](https://github.com/DeusData/codebase-memory-mcp/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/DeusData/codebase-memory-mcp/release.yml?branch=main&label=main%20CI)](https://github.com/DeusData/codebase-memory-mcp/actions/workflows/release.yml)
