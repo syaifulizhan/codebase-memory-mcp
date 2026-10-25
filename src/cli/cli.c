@@ -13680,6 +13680,14 @@ bool cbm_cli_installer_beside_binary(const char *dir) {
 }
 
 int cbm_cmd_update(int argc, char **argv) {
+    /* Fork policy: upstream self-update would replace this hardened build with
+     * the stock release. Rebuild from the fork instead. */
+    if (!getenv("CBM_ALLOW_UPSTREAM_UPDATE")) {
+        (void)argc;
+        (void)argv;
+        fprintf(stderr, "update disabled in this fork: run ~/Projects/codebase-memory-mcp/scripts/fork-rebuild.sh\n");
+        return 1;
+    }
     parse_auto_answer(argc, argv);
 
     bool dry_run = false;

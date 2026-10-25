@@ -414,9 +414,58 @@ bool cbm_has_ignored_suffix(const char *filename, cbm_index_mode_t mode) {
     return false;
 }
 
+/* ── Secret files (fork policy: never indexed, in any mode) ──────
+ * Tracked .env files and key material would otherwise reach the graph and be
+ * served to agents through search_code / get_code_snippet. Templates such as
+ * ".env.example" stay indexable: they document config without carrying it. */
+
+static const char *SECRET_FILENAMES[] = {
+    ".npmrc", ".pypirc", ".netrc", ".git-credentials", ".htpasswd", "credentials.json",
+    "service-account.json", "secrets.json", "secrets.yaml", "secrets.yml", NULL};
+
+static const char *SECRET_SUFFIXES[] = {".pem", ".key", ".p12", ".pfx", ".jks", ".keystore",
+                                        ".env", NULL};
+
+static const char *SECRET_PREFIXES[] = {"id_rsa", "id_dsa", "id_ecdsa", "id_ed25519", NULL};
+
+static const char *ENV_TEMPLATE_SUFFIXES[] = {".example", ".sample", ".template", ".dist", NULL};
+
+bool cbm_is_secret_filename(const char *filename) {
+    if (!filename) {
+        return false;
+    }
+    size_t filename_length = strlen(filename);
+    if (strcmp(filename, ".env") == 0 || strncmp(filename, ".env.", strlen(".env.")) == 0) {
+        for (int i = 0; ENV_TEMPLATE_SUFFIXES[i]; i++) {
+            if (ends_with(filename, filename_length, ENV_TEMPLATE_SUFFIXES[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+    if (str_in_list(filename, SECRET_FILENAMES)) {
+        return true;
+    }
+    for (int i = 0; SECRET_SUFFIXES[i]; i++) {
+        if (ends_with(filename, filename_length, SECRET_SUFFIXES[i])) {
+            return true;
+        }
+    }
+    for (int i = 0; SECRET_PREFIXES[i]; i++) {
+        if (strncmp(filename, SECRET_PREFIXES[i], strlen(SECRET_PREFIXES[i])) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool cbm_should_skip_filename(const char *filename, cbm_index_mode_t mode) {
     if (!filename) {
         return false;
+    }
+
+    if (cbm_is_secret_filename(filename)) {
+        return true;
     }
 
     if (mode != CBM_MODE_FULL) {
