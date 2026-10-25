@@ -1509,6 +1509,8 @@ TEST(mcp_tools_have_behavior_annotations) {
         /* Observation counts accumulate on retries, and ingestion can evict
          * old runs to enforce retention. Both effects change stored data. */
         {"ingest_traces", false, true, false, false},
+        /* Fork addition: read-only composition of the tools above. */
+        {"prepare_change", true, false, true, false},
     };
 
     char *json = cbm_mcp_tools_list();
@@ -2206,7 +2208,7 @@ TEST(server_handle_analysis_profile_filters_and_rejects_mutators) {
         "search_graph",     "query_graph",      "trace_path",     "get_code_snippet",
         "get_file_outline", "get_graph_schema", "compare_graphs", "get_architecture",
         "search_code",      "list_projects",    "index_status",   "check_index_coverage",
-        "detect_changes",
+        "detect_changes",   "prepare_change",
     };
     ASSERT_EQ(mcp_response_tool_count(resp), sizeof(analysis_tools) / sizeof(analysis_tools[0]));
     for (size_t i = 0U; i < sizeof(analysis_tools) / sizeof(analysis_tools[0]); i++) {
@@ -19539,6 +19541,40 @@ TEST(snippet_exact_qn) {
     PASS();
 }
 
+/* Fork addition: prepare_change composes snippet, callers, callees, text
+ * references and outline for one resolved symbol in a single call. */
+TEST(prepare_change_end_to_end) {
+    char tmp[256];
+    cbm_mcp_server_t *srv = setup_snippet_server(tmp, sizeof(tmp));
+    ASSERT_NOT_NULL(srv);
+
+    char *resp = cbm_mcp_handle_tool(
+        srv, "prepare_change", "{\"project\":\"test-project\",\"target\":\"HandleRequest\"}");
+    char *text = extract_text_content(resp);
+    ASSERT_NOT_NULL(text);
+    ASSERT_NOT_NULL(strstr(text, "target: test-project.cmd.server.main.HandleRequest"));
+    ASSERT_NOT_NULL(strstr(text, "file: main.go"));
+    ASSERT_NOT_NULL(strstr(text, "func HandleRequest() error"));
+    ASSERT_NOT_NULL(strstr(text, "## CALLERS"));
+    ASSERT_NOT_NULL(strstr(text, "## USES"));
+    ASSERT_NOT_NULL(strstr(text, "## FILE OUTLINE"));
+    ASSERT_NOT_NULL(strstr(text, "## NEXT"));
+    free(text);
+    free(resp);
+
+    resp = cbm_mcp_handle_tool(srv, "prepare_change",
+                               "{\"project\":\"test-project\",\"target\":\"NoSuchThing\"}");
+    text = extract_text_content(resp);
+    ASSERT_NOT_NULL(text);
+    ASSERT_NOT_NULL(strstr(text, "no indexed symbol"));
+    free(text);
+    free(resp);
+
+    cbm_mcp_server_free(srv);
+    cleanup_snippet_dir(tmp);
+    PASS();
+}
+
 /* Doc -> code candidates on get_code_snippet: a Section lists the functions
  * it is possibly about (highest p first, evidence included), a function the
  * sections that possibly describe it; a row whose other end no longer exists
@@ -25350,6 +25386,7 @@ SUITE(mcp) {
 
     /* Snippet resolution (port of snippet_test.go) */
     RUN_TEST(snippet_exact_qn);
+    RUN_TEST(prepare_change_end_to_end);
     RUN_TEST(snippet_doc_candidates_both_directions);
     RUN_TEST(snippet_qn_suffix);
     RUN_TEST(snippet_unique_short_name);

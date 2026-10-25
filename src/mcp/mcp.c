@@ -87,6 +87,7 @@ enum {
 #include "foundation/subprocess.h"
 #include "foundation/sha256.h"
 #include "foundation/secret_redact.h"
+#include "mcp/prepare_change.h"
 #include "mcp/index_supervisor.h"
 #include "mcp/compact_out.h"
 #include "foundation/str_util.h"
@@ -870,6 +871,9 @@ static const tool_def_t TOOLS[] = {
      "\"description\":\"Run identity, e.g. 'pytest 2026-08-27' (default 'unlabeled'); counts "
      "accumulate per label and whole runs age out together\"},\"project\":{\"type\":"
      "\"string\"}},\"required\":[\"traces\",\"project\"]}"},
+
+    /* Fork addition: one-call edit brief (src/mcp/prepare_change.c). */
+    {"prepare_change", CBM_PREPARE_CHANGE_DESCRIPTION, CBM_PREPARE_CHANGE_SCHEMA},
 };
 
 static const int TOOL_COUNT = sizeof(TOOLS) / sizeof(TOOLS[0]);
@@ -922,6 +926,7 @@ static const tool_annotation_def_t TOOL_ANNOTATIONS[] = {
     {"detect_changes", true, false, true, false, false},
     {"manage_adr", false, true, false, false, false},
     {"ingest_traces", false, true, false, false, false},
+    {"prepare_change", true, false, true, false, false},
 };
 
 static const tool_annotation_def_t *mcp_tool_annotations(const char *name) {
@@ -985,7 +990,7 @@ static bool mcp_tool_allowed(cbm_mcp_tool_profile_t profile, const char *name) {
         "search_graph",     "query_graph",      "trace_path",     "get_code_snippet",
         "get_file_outline", "get_graph_schema", "compare_graphs", "get_architecture",
         "search_code",      "list_projects",    "index_status",   "check_index_coverage",
-        "detect_changes",
+        "detect_changes",   "prepare_change",
     };
     static const char *const scout_tools[] = {
         "search_graph",     "trace_path",    "get_code_snippet", "get_file_outline",
@@ -20530,6 +20535,16 @@ release_request:
 
 /* ── Tool dispatch ────────────────────────────────────────────── */
 
+static char *dispatch_tool(cbm_mcp_server_t *srv, const char *tool_name, const char *args_json);
+
+/* prepare_change composes read tools inside the current request scope. */
+static char *prepare_change_call(void *srv, const char *tool_name, const char *args_json) {
+    if (strcmp(tool_name, "prepare_change") == 0) {
+        return cbm_mcp_text_result("prepare_change cannot call itself", true);
+    }
+    return dispatch_tool((cbm_mcp_server_t *)srv, tool_name, args_json);
+}
+
 static char *dispatch_tool(cbm_mcp_server_t *srv, const char *tool_name, const char *args_json) {
     if (!tool_name) {
         return cbm_mcp_text_result("missing tool name", true);
@@ -20593,6 +20608,9 @@ static char *dispatch_tool(cbm_mcp_server_t *srv, const char *tool_name, const c
     }
     if (strcmp(tool_name, "ingest_traces") == 0) {
         return handle_ingest_traces(srv, args_json);
+    }
+    if (strcmp(tool_name, "prepare_change") == 0) {
+        return cbm_prepare_change(srv, prepare_change_call, args_json);
     }
     char msg[CBM_SZ_256];
     snprintf(msg, sizeof(msg), "unknown tool: %s", tool_name);
