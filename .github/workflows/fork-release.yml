@@ -42,6 +42,10 @@ jobs:
       contents: read
       security-events: write
       actions: read
+    with:
+      # Match the PR scan: trace all first-party C/C++ and changed vendored C,
+      # while compiling unchanged vendored parsers without tracing.
+      light: true
 
   lint:
     uses: ./.github/workflows/_lint.yml
