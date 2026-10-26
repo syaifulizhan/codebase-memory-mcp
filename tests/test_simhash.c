@@ -441,6 +441,14 @@ TEST(minhash_hex_roundtrip) {
     PASS();
 }
 
+TEST(minhash_hex_rejects_short_buffer) {
+    cbm_minhash_t fingerprint = {0};
+    char hex[CBM_MINHASH_HEX_BUF - 1] = "not-empty";
+    cbm_minhash_to_hex(&fingerprint, hex, sizeof(hex));
+    ASSERT_EQ(hex[0], '\0');
+    PASS();
+}
+
 TEST(lsh_same_bucket_similar) {
     /* Two fingerprints with Jaccard ≈ 0.97 (62/64 match) should share a bucket */
     cbm_minhash_t a, b;
@@ -1228,6 +1236,7 @@ SUITE(simhash) {
     RUN_TEST(jaccard_disjoint);
     RUN_TEST(jaccard_partial_overlap);
     RUN_TEST(minhash_hex_roundtrip);
+    RUN_TEST(minhash_hex_rejects_short_buffer);
     RUN_TEST(lsh_same_bucket_similar);
     RUN_TEST(lsh_different_bucket_dissimilar);
     RUN_TEST(lsh_reused_seen_set_matches_fresh_query);
