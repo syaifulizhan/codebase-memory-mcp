@@ -419,12 +419,20 @@ bool cbm_has_ignored_suffix(const char *filename, cbm_index_mode_t mode) {
  * served to agents through search_code / get_code_snippet. Templates such as
  * ".env.example" stay indexable: they document config without carrying it. */
 
-static const char *SECRET_FILENAMES[] = {
-    ".npmrc", ".pypirc", ".netrc", ".git-credentials", ".htpasswd", "credentials.json",
-    "service-account.json", "secrets.json", "secrets.yaml", "secrets.yml", NULL};
+static const char *SECRET_FILENAMES[] = {".npmrc",
+                                         ".pypirc",
+                                         ".netrc",
+                                         ".git-credentials",
+                                         ".htpasswd",
+                                         "credentials.json",
+                                         "service-account.json",
+                                         "secrets.json",
+                                         "secrets.yaml",
+                                         "secrets.yml",
+                                         NULL};
 
-static const char *SECRET_SUFFIXES[] = {".pem", ".key", ".p12", ".pfx", ".jks", ".keystore",
-                                        ".env", NULL};
+static const char *SECRET_SUFFIXES[] = {".pem", ".key",      ".p12", ".pfx",
+                                        ".jks", ".keystore", ".env", NULL};
 
 static const char *SECRET_PREFIXES[] = {"id_rsa", "id_dsa", "id_ecdsa", "id_ed25519", NULL};
 

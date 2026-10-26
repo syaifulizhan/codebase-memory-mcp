@@ -64,7 +64,7 @@ jobs:
         run: echo "/opt/cppcheck/bin" >> "$GITHUB_PATH"
 
       - name: Lint (cppcheck + clang-format, no clang-tidy — enforced locally)
-        run: scripts/lint.sh --ci CLANG_FORMAT=clang-format-20
+        run: scripts/lint.sh --ci CLANG_FORMAT=clang-format-20 CPPCHECK_JOBS=4
 
   # Memory-analyzer gate (user decision 2026-08-03: runner cost accepted).
   # Path-sensitive clang-analyzer over the memory checks only: leak paths,

@@ -274,15 +274,16 @@ char *cbm_prepare_change(void *srv, cbm_prepare_change_call_fn call, const char 
     cbm_sb_append(&out, create_like ? "# prepare_change (create_like): copy this example\n"
                                     : "# prepare_change (edit)\n");
     char line[PC_PATH_MAX * 2];
-    snprintf(line, sizeof(line), "target: %s\nlabel: %s\nfile: %s\nlines: %s\n", sym.qn,
-             sym.label, sym.file, sym.lines);
+    snprintf(line, sizeof(line), "target: %s\nlabel: %s\nfile: %s\nlines: %s\n", sym.qn, sym.label,
+             sym.file, sym.lines);
     cbm_sb_append(&out, line);
 
     /* Budget split: source gets the largest share; graph tables are compact. */
     char rest[PC_ARGS_MAX];
-    snprintf(rest, sizeof(rest), "\"max_output_tokens\":%ld", budget * 45 / 100 < 128 ? 128
-                                                                : budget * 45 / 100);
-    pc_section_args(&out, srv, call, "SOURCE (exact lines; edit these, no need to re-read the file)",
+    snprintf(rest, sizeof(rest), "\"max_output_tokens\":%ld",
+             budget * 45 / 100 < 128 ? 128 : budget * 45 / 100);
+    pc_section_args(&out, srv, call,
+                    "SOURCE (exact lines; edit these, no need to re-read the file)",
                     "get_code_snippet", pc_args(project, "qualified_name", sym.qn, rest));
 
     snprintf(rest, sizeof(rest),
@@ -322,7 +323,8 @@ char *cbm_prepare_change(void *srv, cbm_prepare_change_call_fn call, const char 
 
     if (sym.file[0]) {
         pc_section_args(&out, srv, call, "FILE OUTLINE (where neighbours live; keep this order)",
-                        "get_file_outline", pc_args(project, "file_path", sym.file, "\"limit\":60"));
+                        "get_file_outline",
+                        pc_args(project, "file_path", sym.file, "\"limit\":60"));
     }
 
     cbm_sb_append(&out, create_like
