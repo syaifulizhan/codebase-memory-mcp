@@ -13686,9 +13686,10 @@ int cbm_cmd_update(int argc, char **argv) {
         (void)argc;
         (void)argv;
         fprintf(stderr,
-                "This hardened fork tracks upstream via scripts/fork-rebuild.sh (merge upstream, "
-                "run tests and leak checks, then install). Set CBM_ALLOW_UPSTREAM_UPDATE=1 to use "
-                "the stock updater.\n");
+                "This hardened fork updates from its GitHub release. Run "
+                "curl -fsSL https://raw.githubusercontent.com/syaifulizhan/codebase-memory-mcp/"
+                "hoki-fork/scripts/install-fork.sh | bash again. For a local rebuild, use "
+                "scripts/fork-rebuild.sh.\n");
         return 1;
     }
     parse_auto_answer(argc, argv);

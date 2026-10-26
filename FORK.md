@@ -22,7 +22,25 @@ history is not rewritten). Every merge is built, tested (including the
 test before a binary is installed. Fork patches are kept small and isolated so
 they rarely conflict, and fixes that help everyone are proposed upstream.
 
-## Build
+## Install or update
+
+After a fork release has been published, install it in Claude Code with:
+
+macOS / Linux:
+```sh
+curl -fsSL https://raw.githubusercontent.com/syaifulizhan/codebase-memory-mcp/hoki-fork/scripts/install-fork.sh | bash
+```
+
+Windows PowerShell:
+```powershell
+irm https://raw.githubusercontent.com/syaifulizhan/codebase-memory-mcp/hoki-fork/scripts/install-fork.ps1 | iex
+```
+
+Run the same command again to install the latest fork release. The installer verifies the downloaded archive against the release `checksums.txt` and configures detected coding agents. Restart Claude Code after installation.
+
+To publish a release, open **Actions → Hardened fork release → Run workflow** on branch `hoki-fork` and enter a new `vX.Y.Z` version. The workflow builds the platform archives and publishes them with checksums. It does not run the upstream VirusTotal candidate scan because this fork does not have that upstream secret configured.
+
+## Build locally
 
 ```sh
 scripts/fork-rebuild.sh            # merge upstream/main, build, test, install

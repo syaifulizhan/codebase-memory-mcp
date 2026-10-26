@@ -1,0 +1,108 @@
+name: Hardened fork release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (for example v0.12.2)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate release version
+        env:
+          VERSION: ${{ inputs.version }}
+          REF: ${{ github.ref }}
+        run: |
+          if [ "$REF" != "refs/heads/hoki-fork" ]; then
+            echo "::error::run this release workflow from branch hoki-fork"
+            exit 1
+          fi
+          if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.]+)?$ ]]; then
+            echo "::error::version must be v-prefixed semver (vX.Y.Z)"
+            exit 1
+          fi
+
+  security:
+    uses: ./.github/workflows/_security.yml
+    permissions:
+      contents: read
+    with:
+      lanes: all
+
+  codeql:
+    uses: ./.github/workflows/codeql.yml
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+
+  lint:
+    uses: ./.github/workflows/_lint.yml
+    with:
+      lanes: all
+
+  test:
+    needs: lint
+    uses: ./.github/workflows/_test.yml
+    with:
+      skip_perf: true
+      broad_platforms: true
+      shard_suites: true
+      lanes: all
+
+  build:
+    needs: [preflight, lint, test]
+    uses: ./.github/workflows/_build.yml
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    with:
+      version: ${{ inputs.version }}
+      attest: true
+      # Fork releases do not have the upstream VirusTotal secret. The reusable
+      # builder still packages and verifies every platform archive.
+      scan_candidates: false
+
+  publish:
+    needs: [build, security, codeql]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: binaries-*
+          merge-multiple: true
+          path: release-assets
+
+      - name: Check package set and generate checksums
+        working-directory: release-assets
+        run: |
+          shopt -s nullglob
+          archives=( *.tar.gz *.zip )
+          if [ "${#archives[@]}" -ne 8 ]; then
+            echo "::error::expected 8 platform archives, found ${#archives[@]}"
+            ls -la
+            exit 1
+          fi
+          sha256sum "${archives[@]}" > checksums.txt
+
+      - name: Publish release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          gh release create "$VERSION" \
+            release-assets/*.tar.gz release-assets/*.zip release-assets/checksums.txt \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "Hardened fork $VERSION" \
+            --notes "Hardened fork release. Includes the secret-file exclusion and secret-redaction protections. Static security and CodeQL gates passed. SHA-256 checksums are included. Candidate VirusTotal scanning is not configured for this fork."

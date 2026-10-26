@@ -70,47 +70,31 @@ The high-resolution GIFs show CBM Lens Beta on 20 October 2026; the still images
 
 ## Quick Start
 
-**Install the latest release** (macOS / Linux):
+**Install the latest hardened fork release** (macOS / Linux):
 ```bash
-curl -fsSL https://raw.githubusercontent.com/DeusData/codebase-memory-mcp/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/syaifulizhan/codebase-memory-mcp/hoki-fork/scripts/install-fork.sh | bash
 ```
-
-The standard native release includes CBM Lens. Start it after installation with `codebase-memory-mcp daemon start --open --port=9749`. The [Nix packages](#nix-flake) and [source builds](#build-from-source) also offer builds without the UI.
 
 **Windows** (PowerShell):
 ```powershell
-# 1. Download the installer
-Invoke-WebRequest -Uri https://raw.githubusercontent.com/DeusData/codebase-memory-mcp/main/install.ps1 -OutFile install.ps1
-
-# 2. (Optional but recommended) Inspect the script
-notepad install.ps1
-
-# 3. Unblock the downloaded file (removes Mark-of-the-Web restriction added by browsers/Invoke-WebRequest)
-Unblock-File .\install.ps1
-
-# 4. Run it
-.\install.ps1
-
+irm https://raw.githubusercontent.com/syaifulizhan/codebase-memory-mcp/hoki-fork/scripts/install-fork.ps1 | iex
 ```
 
-> **Note:** If you see a script execution policy error, run `Set-ExecutionPolicy -Scope Process Bypass` first, or invoke with `PowerShell -ExecutionPolicy Bypass -File .\install.ps1`.
+Run the same command again to update. The installer configures detected coding agents. See [FORK.md](FORK.md) for release details. The standard native release includes CBM Lens; start it with `codebase-memory-mcp daemon start --open --port=9749`.
 
-Options: `--skip-config` (binary only, no agent setup), `--dir=<path>` (custom location).
+Options for the installer: `--skip-config` (binary only, no agent setup), `--dir=<path>` (custom location).
 
-> **Antivirus note:** Microsoft Defender may flag a release binary as
-> `Trojan:Script/Wacatac.B!ml`. This is a known false positive; typically 61 of
-> ~62 engines return clean, and the same detection family hits `gh`, llama.cpp,
-> Godot and Microsoft's own Go toolchain. See
-> [Antivirus False Positives](SECURITY.md#antivirus-false-positives) for the
-> evidence, how to verify the artifacts yourself, and how to report it if you
-> think we are wrong.
+> **Release verification:** Fork releases include SHA-256 checksums and pass
+> static security and CodeQL gates. They do not currently include VirusTotal
+> candidate scans. A checksum confirms the downloaded bytes match the release
+> manifest; it does not certify that antivirus software considers the binary safe.
 
 Restart your coding agent. Say **"Index this project"**: done.
 
 <details>
 <summary>Manual install</summary>
 
-1. **Download** the archive for your platform from the [latest release](https://github.com/DeusData/codebase-memory-mcp/releases/latest):
+1. **Download** the archive for your platform from the [latest fork release](https://github.com/syaifulizhan/codebase-memory-mcp/releases/latest):
    - `codebase-memory-mcp-<os>-<arch>.tar.gz` (macOS/Linux) or `.zip` (Windows)
 
 2. **Extract and install** (each archive includes `install.sh` or `install.ps1`):
@@ -118,13 +102,14 @@ Restart your coding agent. Say **"Index this project"**: done.
    macOS / Linux:
    ```bash
    tar xzf codebase-memory-mcp-*.tar.gz
-   ./install.sh
+   CBM_DOWNLOAD_URL=https://github.com/syaifulizhan/codebase-memory-mcp/releases/latest/download ./install.sh
    ```
 
    Windows (PowerShell):
    ```powershell
    Expand-Archive codebase-memory-mcp-windows-amd64.zip -DestinationPath .
    Unblock-File .\install.ps1
+   $env:CBM_DOWNLOAD_URL = "https://github.com/syaifulizhan/codebase-memory-mcp/releases/latest/download"
    .\install.ps1
    ```
 
