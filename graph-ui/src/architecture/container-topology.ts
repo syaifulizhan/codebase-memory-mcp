@@ -300,7 +300,8 @@ function networkCall(name: string): boolean {
         || /^(?:requests|http|https|axios|urllib\.request|urllib3|grpc|redis|psycopg2?|pymysql|mysql|amqp|amqplib|net|socket|ConnectionMultiplexer|Dns)\./i.test(name)
             && /(?:get|post|put|patch|delete|request|urlopen|dial|newclient|connect|connectasync|createclient|createconnection|insecure_channel|secure_channel|gethostentry(?:async)?)$/i.test(name);
 }
-const wordIn = (code: string, name: string): boolean => new RegExp(`\\b${name.replace(/[$]/g, '\\$&')}\\b`).test(code);
+const escapeRegex = (value: string): string => [...value].map(character => '\\^$.*+?()[]{}|'.includes(character) ? `\\${character}` : character).join('');
+const wordIn = (code: string, name: string): boolean => new RegExp(`\\b${escapeRegex(name)}\\b`).test(code);
 interface Wrapper { parameter: number; hint: string }
 /** Bounded local argument propagation to known transport APIs, not a function-name dictionary. */
 function connectionWrappers(code: string, calls: Call[]): Map<string, Wrapper> {

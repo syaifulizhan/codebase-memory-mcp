@@ -37,6 +37,7 @@ import { join, resolve } from 'node:path';
 import { prepareHandtestProfile } from './lib/handtest-profile.mjs';
 
 const argv = process.argv.slice(2);
+const escapeRegex = (value) => [...value].map((character) => '\\^$.*+?()[]{}|'.includes(character) ? '\\' + character : character).join('');
 const arg = (name, fallback) => {
     const index = argv.indexOf(`--${name}`);
     if (index < 0) return fallback;
@@ -460,7 +461,7 @@ try {
 
     // Projektwechsel nach cbm: frischer Verlauf
     await page.locator('.atlas-shell details summary', { hasText: PROJECT }).first().click();
-    const entry = page.locator('.atlas-project-results button', { has: page.locator('.atlas-project-result-name', { hasText: new RegExp(`^${CONTROL}$`) }) }).first();
+    const entry = page.locator('.atlas-project-results button', { has: page.locator('.atlas-project-result-name', { hasText: new RegExp(`^${escapeRegex(CONTROL)}$`) }) }).first();
     await entry.waitFor({ timeout: 20000 });
     await entry.click();
     const fresh = { position: '1/1', back: { disabled: true, title: 'Nothing to go back to yet' }, forward: { disabled: true, title: 'Nothing to go forward to' }, recent: [] };

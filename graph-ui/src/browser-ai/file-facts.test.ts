@@ -82,6 +82,8 @@ describe('facts read from a configuration or text file (K12)', () => {
     it('counts the patterns of an ignore file and names the root element of an XML file', () => {
         expect(fileFactLines('.gitignore', '*.pyc\n# comment\n\n/build\n')).toEqual(['File kind: ignore patterns, not program code; 4 lines.', '2 patterns: `*.pyc`, `/build`.']);
         expect(fileFactLines('pom.xml', '<?xml version="1.0"?>\n<!-- c -->\n<project>\n  <modelVersion>4</modelVersion>\n</project>\n')).toContain('Root element: `<project>`.');
+        expect(fileFactLines('pom.xml', '<!-- <fake> -->\n<real/>\n')).toContain('Root element: `<real>`.');
+        expect(fileFactLines('pom.xml', '<!-- <fake>\n<real/>\n')).not.toContain('Root element: `<real>`.');
     });
 
     it('says nothing about program code and keeps the workflow facts for a workflow', () => {

@@ -22,6 +22,8 @@ paths:
 paths-ignore:
   - internal/cbm/vendored
   - graph-ui/vendor
+  # Browser hand-test and smoke harnesses are local verification tools; they are not packaged in release artifacts.
+  - graph-ui/tools
   - graph-ui/fixtures
   - graph-ui/verification
   - tests/fixtures

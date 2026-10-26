@@ -27,6 +27,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 
 const argv = process.argv.slice(2);
+const escapeRegex = (value) => [...value].map((character) => '\\^$.*+?()[]{}|'.includes(character) ? '\\' + character : character).join('');
 const arg = (name, fallback) => {
     const index = argv.indexOf(`--${name}`);
     if (index < 0) return fallback;
@@ -175,7 +176,7 @@ async function select(page, name) {
     await input.click();
     await input.fill('');
     await input.type(name, { delay: 25 });
-    const choice = page.locator('.atlas-galaxy-search-results button', { has: page.locator('strong', { hasText: new RegExp(`^${name}$`) }) }).first();
+    const choice = page.locator('.atlas-galaxy-search-results button', { has: page.locator('strong', { hasText: new RegExp(`^${escapeRegex(name)}$`) }) }).first();
     await choice.waitFor({ timeout: 20000 });
     await choice.click();
 }
@@ -843,7 +844,7 @@ const activeWorkspace = (page) => page.locator('[data-workspace-tab][aria-select
 const sameText = (left, right) => left.replace(/\d[\d,.:]*/g, '#').replace(/\s+/g, ' ') === right.replace(/\d[\d,.:]*/g, '#').replace(/\s+/g, ' ');
 async function switchTo(page, project) {
     await page.locator('.atlas-project-switcher summary').first().click();
-    await page.locator('.atlas-project-picker button', { has: page.locator('.atlas-project-result-name', { hasText: new RegExp(`^${project}`) }) }).first().click();
+    await page.locator('.atlas-project-picker button', { has: page.locator('.atlas-project-result-name', { hasText: new RegExp(`^${escapeRegex(project)}`) }) }).first().click();
 }
 
 const pageState = (page) => page.evaluate(() => ({ id: window.__probePage, origin: performance.timeOrigin, workers: window.__probeModelWorkers }));
@@ -1064,7 +1065,7 @@ async function k24(page) {
     const downloads = modelRequests.length - requestsBefore;
     await save('K24', 'legs.json', legs);
     const legOk = (leg) => leg.samePage && leg.workspace.before === leg.workspace.after && leg.modelWorkersCreated === 0 && leg.prepares === 0 && leg.lamp.every((frame) => /Agent active/.test(frame.label ?? ''))
-        && new RegExp(leg.to).test(leg.project ?? '') && leg.requestsNamingOldProject.length === 0 && leg.views.length === K24_VIEWS.length && leg.views.every((view) => !view.stale && !view.unexpected.length) && leg.galaxySameAsFresh
+        && leg.project === leg.to && leg.requestsNamingOldProject.length === 0 && leg.views.length === K24_VIEWS.length && leg.views.every((view) => !view.stale && !view.unexpected.length) && leg.galaxySameAsFresh
         && (leg.to !== CONTROL || leg.chatHasOldTurn === false) && (leg.to !== PROJECT || leg.how !== 'switcher' || leg.chatKeptOwnTurn === true);
     check('K24', 'A project switch stays in the page: the model stays loaded (no reload, no new worker, lamp active), every workspace shows only the new project and the Galaxy its graph, no request names the old one; Back/Forward the same, all views checked',
         loaded && downloads === 0 && legs.every(legOk),

@@ -26,6 +26,8 @@ it('quotes a real README paragraph while skipping badges, HTML and code', () => 
     expect(sourceQuote('README.md', '# Project\n[![CI](badge.png)](https://example.com)\n\nA local repository index exposes symbols and relationships to coding tools.\n'))
         .toEqual({ path: 'README.md', line: 4, text: 'A local repository index exposes symbols and relationships to coding tools.', kind: 'readme' });
     expect(sourceQuote('README.md', '# Project\n```\nThis is an example string with enough words to look like a description.\n```')).toBeUndefined();
+    expect(sourceQuote('README.md', '# Project\nA local repository index <script malicious payload is not executable and provides symbols and relationships to coding tools.\n')?.text)
+        .not.toContain('<');
 });
 
 it('retains header location, ignores code and does not turn a license into a responsibility', () => {

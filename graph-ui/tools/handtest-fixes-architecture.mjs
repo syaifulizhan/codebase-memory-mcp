@@ -38,6 +38,7 @@ import { join, resolve } from 'node:path';
 import { inflateSync } from 'node:zlib';
 
 const argv = process.argv.slice(2);
+const escapeRegex = (value) => [...value].map((character) => '\\^$.*+?()[]{}|'.includes(character) ? '\\' + character : character).join('');
 const arg = (name, fallback) => {
     const index = argv.indexOf(`--${name}`);
     if (index < 0) return fallback;
@@ -446,7 +447,7 @@ async function hoverSweep(page) {
         const hid = [];
         let shown = false;
         for (const id of ids.slice(0, 14)) {
-            const chip = page.locator(`button.architecture-node-label[data-node-id="${id.replace(/"/g, '\\"')}"]`).first();
+            const chip = page.locator(`button.architecture-node-label[data-node-id="${id.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"]`).first();
             if (!(await chip.isVisible().catch(() => false))) continue;
             await chip.hover({ timeout: 3000 }).catch(() => {});
             await wait(450);
@@ -498,7 +499,7 @@ async function k21(page) {
 
 async function switchProject(page, name) {
     await page.locator('.atlas-shell details summary', { hasText: PROJECT }).first().click();
-    const entry = page.locator('.atlas-project-results button', { has: page.locator('.atlas-project-result-name', { hasText: new RegExp(`^${name}$`) }) }).first();
+    const entry = page.locator('.atlas-project-results button', { has: page.locator('.atlas-project-result-name', { hasText: new RegExp(`^${escapeRegex(name)}$`) }) }).first();
     await entry.waitFor({ timeout: 20000 });
     await entry.click();
 }

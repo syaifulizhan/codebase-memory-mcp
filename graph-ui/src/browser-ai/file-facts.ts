@@ -130,7 +130,8 @@ function patternFacts(text: string): string[] {
 }
 
 function xmlFacts(text: string): string[] {
-    const root = /<([A-Za-z_][\w:.-]*)[\s>/]/.exec(text.replace(/<\?[\s\S]*?\?>|<!--[\s\S]*?-->|<![^>]*>/g, ''));
+    const content = text.replace(/<\?[\s\S]*?\?>/g, '').replace(/<!--[\s\S]*?(?:-->|$)/g, '').replace(/<![^>]*>/g, '');
+    const root = /<([A-Za-z_][\w:.-]*)[\s>/]/.exec(content);
     return root ? [words.root(quote(`<${root[1]}>`))] : [];
 }
 
