@@ -138,13 +138,17 @@ jobs:
       # dry run and the release cannot pass; a PR (refs/pull/<n>/merge: what
       # its changed lines introduce) fails ci-ok. With a zero baseline "any
       # open alert" is exactly "a new alert"; a dismissal (with a reason, in
-      # the Security tab) holds on every ref. Every leg checks after its own
-      # upload, so each language's alerts are seen by at least its own leg.
+      # the Security tab) holds on every ref. Each matrix leg checks only its
+      # language so old findings from another leg cannot make it fail. The
+      # light fork scan intentionally does not trace unchanged vendored code;
+      # exclude those paths from its gate while leaving alerts visible.
       # Moved from _security.yml's former PR-CI codeql-gate job.
       - name: Check for open code scanning alerts
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ALERT_REF: ${{ github.ref }}
+          ALERT_LANGUAGE: ${{ matrix.language }}
+          ALERT_LIGHT: ${{ inputs.light }}
         run: |
           # FAIL CLOSED. The previous form was `gh api ... 2>/dev/null || echo "0"`,
           # which looks defensive and is the opposite. gh writes the API error
@@ -161,8 +165,9 @@ jobs:
           # replaces. The callers below check the status explicitly.
           count_open_alerts() {
             local body status
-            body=$(gh api "repos/${{ github.repository }}/code-scanning/alerts?state=open&ref=$ALERT_REF" \
-                     --jq 'length' 2>/dev/null)
+            set -o pipefail
+            body=$(gh api --paginate --slurp "repos/${{ github.repository }}/code-scanning/alerts?state=open&ref=$ALERT_REF" 2>/dev/null |
+                     jq --arg language "$ALERT_LANGUAGE" --arg light "$ALERT_LIGHT" '[.[][] | select(.most_recent_instance.category == ("/language:" + $language)) | select($light != "true" or (.most_recent_instance.location.path | startswith("internal/cbm/vendored/") | not))] | length')
             status=$?
             if [ $status -ne 0 ]; then
               echo "BLOCKED: cannot read code scanning alerts (gh exit $status)." >&2
@@ -185,10 +190,10 @@ jobs:
           ALERTS2=$(count_open_alerts) || exit 1
           [ "$ALERTS" -lt "$ALERTS2" ] && ALERTS=$ALERTS2
           if [ "$ALERTS" -gt 0 ]; then
-            echo "::error title=Open code scanning alerts::$ALERTS open alert(s) on $ALERT_REF -- fix, or dismiss with a reason in the Security tab"
-            echo "BLOCKED: $ALERTS open alert(s)"
-            gh api "repos/${{ github.repository }}/code-scanning/alerts?state=open&ref=$ALERT_REF" \
-              --jq '.[] | "  #\(.number) [\(.rule.security_severity_level // .rule.severity)] \(.rule.id) — \(.most_recent_instance.location.path):\(.most_recent_instance.location.start_line)"' 2>/dev/null || true
+            echo "::error title=Open code scanning alerts::$ALERTS open $ALERT_LANGUAGE alert(s) on $ALERT_REF -- fix, or dismiss with a reason in the Security tab"
+            echo "BLOCKED: $ALERTS open $ALERT_LANGUAGE alert(s)"
+            gh api --paginate --slurp "repos/${{ github.repository }}/code-scanning/alerts?state=open&ref=$ALERT_REF" 2>/dev/null |
+              jq -r --arg language "$ALERT_LANGUAGE" --arg light "$ALERT_LIGHT" '.[][] | select(.most_recent_instance.category == ("/language:" + $language)) | select($light != "true" or (.most_recent_instance.location.path | startswith("internal/cbm/vendored/") | not)) | "  #\(.number) [\(.rule.security_severity_level // .rule.severity)] \(.rule.id) — \(.most_recent_instance.location.path):\(.most_recent_instance.location.start_line)"' || true
             exit 1
           fi
           echo "=== CodeQL gate passed (0 alerts) ==="
