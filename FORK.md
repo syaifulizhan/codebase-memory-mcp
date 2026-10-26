@@ -40,6 +40,8 @@ Run the same command again to install the latest fork release. The installer ver
 
 To publish a release, open **Actions → Hardened fork release → Run workflow** on branch `hoki-fork` and enter a new `vX.Y.Z` version. The workflow builds the platform archives and publishes them with checksums. It does not run the upstream VirusTotal candidate scan because this fork does not have that upstream secret configured.
 
+The release CodeQL scan covers shipped source. It excludes `graph-ui/tools`, which contains local smoke and hand-test harnesses and is not included in release archives. UI source under `graph-ui/src` remains in scope.
+
 ## Build locally
 
 ```sh
