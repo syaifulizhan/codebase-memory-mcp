@@ -41,7 +41,8 @@ export function sourceCandidates(area: RepositoryArea): string[] {
 }
 
 function plainMarkdown(text: string): string {
-    return text.replace(/<!--[\s\S]*?(?:-->|$)/g, '').replace(/!\[[^\]]*\]\([^)]*\)/g, '').replace(/\[([^\]]+)\]\([^)]*\)/g, '$1').replace(/<[^>]*>/g, '').replace(/</g, '‹').replace(/>/g, '›').replace(/[*_`]/g, '').trim();
+    const plain = text.replace(/<!--[\s\S]*?(?:-->|$)/g, '').replace(/!\[[^\]]*\]\([^)]*\)/g, '').replace(/\[([^\]]+)\]\([^)]*\)/g, '$1').replace(/[*_`]/g, '');
+    return plain.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').trim();
 }
 
 /** Quote only repository-authored prose, never infer a responsibility from an identifier. */
